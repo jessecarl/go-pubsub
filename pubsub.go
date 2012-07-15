@@ -33,3 +33,16 @@ type Publisher interface {
 	Publish(Filter) (<-chan Message, chan<- bool, error)
 	Identify() string
 }
+
+// Subscribers are identifiable recipients of new information.
+// We only care that they provide a channel for sending
+// Messages from Publishers and a channel to receive a signal
+// to stop sending Messages.
+//
+// The value sent over the boolean channel does not matter.
+// The act of sending a value over the channel is a request
+// to stop sending Messages.
+type Subscriber interface {
+	Subscribe() (chan<- Message, <-chan bool, error)
+	Identify() string
+}
