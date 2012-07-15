@@ -46,3 +46,8 @@ type Subscriber interface {
 	Subscribe() (chan<- Message, <-chan bool, error)
 	Identify() string
 }
+
+// PubSub manages the Subscriber/Publisher/Filter relationship.
+type PubSub struct {
+	subscriptions map[string](*subscription)
+}
