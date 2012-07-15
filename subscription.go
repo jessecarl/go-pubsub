@@ -50,3 +50,21 @@ func (s *subscription) addSubscriber(sub Subscriber) (err error) {
 	}
 	return nil
 }
+
+// removeSubscriber will remove the indicated subscriber and
+// if there are none left, send a signal to stop incoming messages
+// and return true to indicate that this subscription is dead.
+func (s *subscription) removeSubscriber(sub Subscriber) bool {
+	k := sub.Identify()
+	sc := s.subs[k]
+	if sc != nil {
+		close(sc)
+		delete(s.subs, k)
+		if len(s.subs) == 0 {
+			// no more subscribers
+			s.stop <- true
+			return true
+		}
+	}
+	return false
+}

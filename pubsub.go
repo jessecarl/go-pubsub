@@ -100,3 +100,20 @@ func generateKey(p Publisher, f Filter) string {
 	io.WriteString(h, f.Identify())
 	return string(h.Sum(nil))
 }
+
+// UnRegister removes existing Publisher/Filter to Subscriber(s)
+// relationships.
+func (ps *PubSub) UnRegister(p Publisher, f Filter, subs ...Subscriber) {
+	k := generateKey(p, f)
+	s := ps.subscriptions[k]
+	if s == nil {
+		// no subscribers to unregister
+		return
+	}
+
+	for _, sub := range subs {
+		if dead := s.removeSubscriber(sub); dead {
+			delete(ps.subscriptions, k)
+		}
+	}
+}
