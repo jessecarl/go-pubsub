@@ -14,3 +14,22 @@ type Message struct {
 	TimeStamp time.Time
 	FullText  string
 }
+
+// Filters are an identifiable interface used to specify
+// what results a Publisher should send over a channel
+type Filter interface {
+	Identify() string
+}
+
+// Publishers are identifiable sources of new information.
+// We only care that they provide a channel for receiving
+// Messages to send to Subscribers and a channel to send
+// a signal to stop sending Messages.
+//
+// The value sent over the boolean channel should not
+// matter, though it will be true. The act of sending
+// over the channel is a request to stop sending Messages.
+type Publisher interface {
+	Publish(Filter) (<-chan Message, chan<- bool, error)
+	Identify() string
+}
