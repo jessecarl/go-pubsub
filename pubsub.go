@@ -51,3 +51,8 @@ type Subscriber interface {
 type PubSub struct {
 	subscriptions map[string](*subscription)
 }
+
+func New() *PubSub {
+	ps := new(PubSub)
+	return ps
+}
