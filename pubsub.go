@@ -64,30 +64,24 @@ func New() *PubSub {
 // of Subscriber because the Publisher is initiating the communication
 // of Messages.
 //
-// Subscribers cannot be added more than once. This is enforced silently
-// rather than by returning an error value as the caller should not know
-// or care about the current subscription state.
+// Subscribers will not be added more than once. It is not currently
+// and error state.
 //
-// If there is an error with the Publisher, nothing will be added.
-// If there is an error with a Subscriber, that Subscriber and any
-// listed after will not be added, but subscribers already added
-// will remain.
-func (ps *PubSub) Register(p Publisher, f Filter, subs ...Subscriber) (err error) {
+// TODO: Consider returning error for already subscribed Subscriber.
+func (ps *PubSub) Register(p Publisher, f Filter, sub Subscriber) (err error) {
 	k := generateKey(p, f)
 	s := ps.subscriptions[k]
 	// publishers only need to be added once
 	if s == nil {
-		s= new(subscription)
+		s = new(subscription)
 		err = s.init(p, f)
 		if err != nil {
 			return err
 		}
 	}
-	for _, sub := range subs {
-		err = s.addSubscriber(sub)
-		if err != nil {
-			return err
-		}
+	err = s.addSubscriber(sub)
+	if err != nil {
+		return err
 	}
 	return nil
 }
