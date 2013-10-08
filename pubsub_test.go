@@ -18,4 +18,11 @@ func TestNew(t *testing.T) {
 
 func TestRegister(t *testing.T) {
 	t.Errorf("Tests not created")
+	// TODO [jesse@jessecarl.com][2013-10-08]: create test publishers
+	// TODO [jesse@jessecarl.com][2013-10-08]: create test subscribers
+	// TODO [jesse@jessecarl.com][2013-10-08]: create test filters
+	// TODO [jesse@jessecarl.com][2013-10-08]: create test cases as follows:
+	// * basic set of publisher, subscriber, filter combinations
+	// * heavy load (large number of publishers, subscribers, etc.)
+	// * concurrency (heavy concurrent load)
 }

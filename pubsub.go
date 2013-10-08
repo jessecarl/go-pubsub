@@ -54,6 +54,7 @@ type PubSub struct {
 	subscriptions map[string](*subscription)
 }
 
+// TODO: Currently no bootstrapping here, but there may be soon enough
 func New() *PubSub {
 	ps := new(PubSub)
 	return ps
