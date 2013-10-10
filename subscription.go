@@ -4,19 +4,33 @@
 
 package pubsub
 
+import (
+	"errors"
+)
+
 // subscription is our implementation of the fundamental
 // pubsub communication
 type subscription struct {
 	pub  <-chan Message
-	subs map[string]chan<- Message
+	subs []chan<- Message
 	stop chan<- bool
 }
 
-func (s *subscription) init(p Publisher, f Filter) (err error) {
-	s.pub, s.stop, err = p.Publish(f)
+func (s *subscription) init(p Publisher, filter string) (err error) {
+	s.pub, s.stop, err = p(filter)
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (s *subscription) start() {
+	// TODO [jesse@jessecarl.com][2013-10-10]: actually start listening
+	return
+}
+
+/*
+  // TODO: move this to a start method
 	go func() {
 		for message := range s.pub {
 			for _, sub := range s.subs {
@@ -30,41 +44,41 @@ func (s *subscription) init(p Publisher, f Filter) (err error) {
 	}()
 	return nil
 }
+*/
 
-func (s *subscription) addSubscriber(sub Subscriber) (err error) {
-	var stop <-chan bool
-	k := sub.Identify()
-	// subscribers only need to be added once
-	sc := s.subs[k]
-	if sc == nil {
-		s.subs[k], stop, err = sub.Subscribe()
-		if err != nil {
-			delete(s.subs, k)
-			return err
-		}
-		go func() {
-			<-stop
-			close(s.subs[k])
-			delete(s.subs, k)
-		}()
+func (s *subscription) addSubscriber(sub Subscriber) error {
+	m, stop, err := sub()
+	if err != nil {
+		return err
 	}
+	for _, existing := range s.subs {
+		if existing == m {
+			return errors.New(errAlreadySubscribed)
+		}
+	}
+	s.subs = append(s.subs, m)
+	go func() {
+		<-stop
+		s.removeSubscriber(m)
+	}()
 	return nil
 }
 
 // removeSubscriber will remove the indicated subscriber and
 // if there are none left, send a signal to stop incoming messages
 // and return true to indicate that this subscription is dead.
-func (s *subscription) removeSubscriber(sub Subscriber) bool {
-	k := sub.Identify()
-	sc := s.subs[k]
-	if sc != nil {
-		close(sc)
-		delete(s.subs, k)
-		if len(s.subs) == 0 {
-			// no more subscribers
-			s.stop <- true
-			return true
+func (s *subscription) removeSubscriber(sub chan<- Message) bool {
+	for i, existing := range s.subs {
+		if existing == sub {
+			s.subs = append(s.subs[:i], s.subs[i+1:]...)
+			break
 		}
+	}
+	close(sub)
+	if len(s.subs) == 0 {
+		// no more subscribers, signal the publisher to stop
+		close(s.stop)
+		return true
 	}
 	return false
 }
